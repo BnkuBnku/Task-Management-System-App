@@ -16,6 +16,14 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 npm install
 ```
 
+## Include Primevue and Draggable
+```sh
+npm install primevue @primeuix/themes
+```
+```sh
+npm install vuedraggable
+```
+
 ### Compile and Hot-Reload for Development
 
 ```sh
