@@ -1,4 +1,3 @@
-// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import HomeView from '@/views/HomeView.vue'
@@ -18,21 +17,15 @@ const router = createRouter({
   routes,
 })
 
-// Ensure auth state is known before first navigation
-let bootstrapped = false
-
-router.beforeEach(async (to) => {
+router.beforeEach((to, from, next) => {
   const auth = useAuthStore()
-  if (!bootstrapped) {
-    bootstrapped = true
-    await auth.fetchUser() // try to restore session
-  }
 
-  if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    return { name: 'login', query: { redirect: to.fullPath } }
-  }
-  if (to.meta.guestOnly && auth.isAuthenticated) {
-    return { name: 'tasks' }
+  if (to.meta.requiresAuth && !auth.token) {
+    next({ name: 'login', query: { redirect: to.fullPath } })
+  } else if (to.meta.guestOnly && auth.token) {
+    next({ name: 'tasks' })
+  } else {
+    next()
   }
 })
 

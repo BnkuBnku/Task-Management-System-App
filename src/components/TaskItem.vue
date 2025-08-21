@@ -1,31 +1,50 @@
 <template>
   <div
-    class="flex items-center justify-between p-3 mb-2 rounded shadow-sm transition"
-    :class="{
-      'bg-green-100 line-through': task.completed,
-      'bg-red-100': task.priority === 'high' && !task.completed,
-      'bg-yellow-100': task.priority === 'medium' && !task.completed,
-      'bg-blue-100': task.priority === 'low' && !task.completed,
-    }"
+    :class="[
+      'p-4 rounded shadow mb-2 flex justify-between items-center transition-colors',
+      priorityClass,
+      task.status === 'completed' ? 'opacity-50 line-through' : ''
+    ]"
   >
-    <div class="flex items-center gap-2">
-      <input type="checkbox" v-model="task.completed" @change="toggleTask(task.id)" />
-      <span>{{ task.title }}</span>
+    <div>
+      <p class="font-bold">{{ task.title }}</p>
+      <p class="text-sm">{{ task.description }}</p>
     </div>
-    <button
-      class="text-red-600 hover:text-red-800"
-      @click="deleteTask(task.id)"
-    >
-      ✕
-    </button>
+    <div class="flex items-center space-x-2">
+      <input type="checkbox" v-model="localStatus" @change="toggleStatus" />
+      <button v-if="isAdmin" @click="$emit('delete', task.id)" class="text-red-500">Delete</button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { useTaskStore } from '@/stores/taskStore'
-const props = defineProps({ task: Object })
+import { ref, watch } from 'vue';
+import { useTasks } from '../stores/tasks';
 
-const store = useTaskStore()
-const toggleTask = store.toggleTask
-const deleteTask = store.deleteTask
+const props = defineProps({
+  task: Object,
+  isAdmin: Boolean
+});
+
+const emit = defineEmits(['delete']);
+
+const { updateTask } = useTasks();
+
+const localStatus = ref(props.task.status === 'completed');
+
+watch(localStatus, async (newVal) => {
+  await updateTask(props.task.id, { status: newVal ? 'completed' : 'pending' });
+});
+
+const toggleStatus = () => {
+  localStatus.value = !localStatus.value;
+};
+
+const priorityClass = computed(() => {
+  switch (props.task.priority) {
+    case 'high': return 'bg-red-100';
+    case 'medium': return 'bg-yellow-100';
+    case 'low': return 'bg-green-100';
+  }
+});
 </script>
